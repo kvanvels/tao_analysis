@@ -347,11 +347,35 @@ theorem Nat.lt_iff_succ_le (a b:Nat) : a < b ↔ a++ ≤ b := by
   exact L a ℓ
 
 /-- (f) a < b if and only if b = a + d for positive d. -/
-theorem Nat.lt_iff_add_pos (a b:Nat) : a < b ↔ ∃ d:Nat, d.IsPos ∧ b = a + d := by  
-
+theorem Nat.lt_iff_add_pos (a b:Nat) :
+    a < b ↔ ∃ d:Nat, d.IsPos ∧ b = a + d := by  
+  apply Iff.intro
+  rintro ⟨⟨r,rfl⟩ ,h1⟩
+  rcases r with (_|predr)
+  have h2 : Nat.zero = 0 := by rfl
+  rw [h2,add_zero] at h1
+  apply False.elim
+  apply h1
+  rfl
+  use (predr++)
+  apply And.intro
+  unfold IsPos
+  apply Nat.succ_ne
+  rfl
+  rintro ⟨r,h0,rfl⟩
+  apply And.intro
+  use r
+  rcases r with (_|predr)
+  have h2 : Nat.zero = 0 := by rfl
+  rw [h2] at h0
+  apply False.elim
+  apply h0
+  rfl
+  apply L a predr
+  
 
 /-- If a < b then a ̸= b,-/
-theorem Nat.ne_of_lt (a b:Nat) : a < b → a ≠ b := by
+theorem Nat.ne_of_lt (a b:Nat) : a < b → a ≠ b := by 
   intro h; exact h.2
 
 /-- if a > b then a ̸= b. -/
@@ -380,7 +404,9 @@ theorem Nat.lt_of_le_of_lt {a b c : Nat} (hab: a ≤ b) (hbc: b < c) : a < c := 
 /-- This lemma was a {lit}`why?` statement from Proposition 2.2.13,
 but is more broadly useful, so is extracted here. -/
 theorem Nat.zero_le (a:Nat) : 0 ≤ a := by
-  sorry
+  use a
+  rw [zero_add]  
+
 
 /-- Proposition 2.2.13 (Trichotomy of order for natural numbers) / Exercise 2.2.4
     Compare with Mathlib's {name}`trichotomous`.  Parts of this theorem have been placed
@@ -413,20 +439,41 @@ theorem Nat.trichotomous (a b:Nat) : a < b ∨ a = b ∨ a > b := by
 def Nat.decLe : (a b : Nat) → Decidable (a ≤ b)
   | 0, b => by
     apply isTrue
-    sorry
+    use b
+    rw [zero_add]
   | a++, b => by
     cases decLe a b with
     | isTrue h =>
       cases decEq a b with
-      | isTrue h =>
+      | isTrue h1 =>
         apply isFalse
-        sorry
-      | isFalse h =>
+        intro h0
+        rw [h1] at h0
+        rcases h0 with ⟨r,h0⟩
+        rw [succ_add,←add_succ] at h0
+        have h1 := L b r
+        exact h1 h0
+      | isFalse h0 =>
         apply isTrue
-        sorry
+        rcases h with ⟨r,h⟩
+        have h1 : Nat.zero = 0 := by rfl
+        rcases r with (_|predr)
+        apply False.elim
+        rw [h1,add_zero] at h
+        apply h0
+        rw [h]
+        use predr
+        rw [h,add_succ,succ_add]        
+        
     | isFalse h =>
       apply isFalse
-      sorry
+      intro h1
+      apply h
+      clear h
+      rcases h1 with ⟨r,rfl⟩
+      use (r++)
+      rw [succ_add,add_succ]      
+
 
 instance Nat.decidableRel : DecidableRel (· ≤ · : Nat → Nat → Prop) := Nat.decLe
 
@@ -483,9 +530,37 @@ example (a b c d e:Nat) (hab: a ≤ b) (hbc: b < c) (hde: d < e) :
 /-- Proposition 2.2.14 (Strong principle of induction) / Exercise 2.2.5
     Compare with Mathlib's {name}`Nat.strong_induction_on`.
 -/
+
+theorem Nat.strong_induction_dumb {m₀:Nat} {P: Nat → Prop}
+  (hind: ∀ m, m ≥ 0 → (∀ m', 0 ≤ m' ∧ m' < m → P m') → P m) :
+    ∀ m, m ≥ 0 → P m := by  
+  sorry
+
+theorem Nat.strong_induction_1 {P: Nat → Prop}
+  (hind: ∀ m: Nat,(∀ m', m' < m → P m') → P m) :
+    ∀ m: Nat, P m := by  
+  intro m
+  have h1 : ∀ m' : Nat, m' < m → P m' := by
+    induction' m with k hk
+    · sorry
+    intro m' hm
+    rcases em (m' < k) with (hmm|hmm)
+    exact hk m' hmm
+    push_neg at hmm
+    have hmmm : m' = k := by sorry
+    rw [hmmm]    
+    have hind' := hind k
+    apply hind' hk    
+  exact hind m h1
+  
+  
+  
+  
+  
+
 theorem Nat.strong_induction {m₀:Nat} {P: Nat → Prop}
   (hind: ∀ m, m ≥ m₀ → (∀ m', m₀ ≤ m' ∧ m' < m → P m') → P m) :
-    ∀ m, m ≥ m₀ → P m := by
+    ∀ m, m ≥ m₀ → P m := by  
   sorry
 
 /-- Exercise 2.2.6 (backwards induction)
@@ -499,6 +574,20 @@ theorem Nat.backwards_induction {n:Nat} {P: Nat → Prop}
     Compare with Mathlib's {name}`Nat.le_induction`. -/
 theorem Nat.induction_from {n:Nat} {P: Nat → Prop} (hind: ∀ m, P m → P (m++)) :
     P n → ∀ m, m ≥ n → P m := by
+  intro hstart m ⟨r,hmbig⟩
+  rw [hmbig];   clear hmbig
+  induction' r with k hk
+  have h1 : Nat.zero = 0 := by rfl
+  rw [h1,add_zero]
+  exact hstart
+  rw [add_succ]
+  exact hind (n+k) hk
+
+
+  
+  
+  
+
   sorry
 
 
