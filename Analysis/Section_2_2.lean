@@ -125,7 +125,10 @@ theorem Nat.add_left_cancel (a b c:Nat) (habc: a + b = a + c) : b = c := by
   replace hbc := succ_cancel hbc
   exact ih hbc
 
-
+theorem Nat.add_right_cancel (a b c:Nat) (habc: a + c = b + c) : a = b := by
+  rw [add_comm a c,add_comm b c] at habc  
+  exact Nat.add_left_cancel c a b habc
+  
 /-- (Not from textbook) {name}`Nat` can be given the structure of a commutative additive monoid.
 This permits tactics such as {tactic}`abel` to apply to the Chapter 2 natural numbers. -/
 instance Nat.addCommMonoid : AddCommMonoid Nat where
@@ -289,9 +292,7 @@ lemma L (a b : Nat) : a ≠ a + b++ := by
   apply h2
   rw [h0]
   rw [Nat.succ_add] at h0
-  apply hk (Nat.succ.inj h0)
-  
-  
+  apply hk (Nat.succ.inj h0)  
   
 
 theorem Nat.le_trans {a b c:Nat} (hab: a ≤ b) (hbc: b ≤ c) : a ≤ c := Nat.ge_trans hbc hab
@@ -301,16 +302,18 @@ theorem Nat.ge_antisymm {a b:Nat} (hab: a ≥ b) (hba: b ≥ a) : a = b := by
   rcases hab with ⟨p,rfl⟩
   rcases p with (_|predp)
   have h1 : Nat.zero = 0 := rfl
-  rw [h1,add_zero]
-  
-  
-  
-  
-  
+  rw [h1,add_zero]  
 
 /-- (d) (Addition preserves order).  Compare with Mathlib's {name}`Nat.add_le_add_right`. -/
 theorem Nat.add_ge_add_right (a b c:Nat) : a ≥ b ↔ a + c ≥ b + c := by
-  sorry
+  apply Iff.intro
+  rintro ⟨r,rfl⟩
+  use r
+  rw [add_assoc,add_comm r c,←add_assoc]
+  rintro ⟨r,ha⟩
+  use r
+  rw [add_assoc b c r,add_comm c r,←add_assoc] at ha
+  exact Nat.add_right_cancel a (b + r) c ha
 
 /-- (d) (Addition preserves order).  Compare with Mathlib's {name}`Nat.add_le_add_left`.  -/
 theorem Nat.add_ge_add_left (a b c:Nat) : a ≥ b ↔ c + a ≥ c + b := by
@@ -325,11 +328,27 @@ theorem Nat.add_le_add_left (a b c:Nat) : a ≤ b ↔ c + a ≤ c + b := add_ge_
 
 /-- (e) a < b iff a++ ≤ b.  Compare with Mathlib's {name}`Nat.succ_le_iff`. -/
 theorem Nat.lt_iff_succ_le (a b:Nat) : a < b ↔ a++ ≤ b := by
-  sorry
+  apply Iff.intro
+  intro h0
+  rcases h0 with ⟨⟨l,hl⟩,h2⟩
+  rcases l with (_|preda)
+  have hz : Nat.zero = 0 := by rfl
+  rw [hz,add_zero] at hl
+  apply False.elim
+  apply h2
+  rw [hl]
+  use preda
+  rw [hl,add_succ,succ_add]
+  rintro ⟨ℓ,rfl⟩
+  apply And.intro
+  use (ℓ++)
+  rw [add_succ,succ_add]
+  rw [succ_add,←add_succ]
+  exact L a ℓ
 
 /-- (f) a < b if and only if b = a + d for positive d. -/
-theorem Nat.lt_iff_add_pos (a b:Nat) : a < b ↔ ∃ d:Nat, d.IsPos ∧ b = a + d := by
-  sorry
+theorem Nat.lt_iff_add_pos (a b:Nat) : a < b ↔ ∃ d:Nat, d.IsPos ∧ b = a + d := by  
+
 
 /-- If a < b then a ̸= b,-/
 theorem Nat.ne_of_lt (a b:Nat) : a < b → a ≠ b := by
