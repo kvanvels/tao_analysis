@@ -60,12 +60,23 @@ theorem Nat.two_mul (m: Nat) : 2 * m = 0 + m + m := by
 /-- This lemma will be useful to prove Lemma 2.3.2.
 Compare with Mathlib's {name}`Nat.mul_zero` -/
 lemma Nat.mul_zero (n: Nat) : n * 0 = 0 := by
-  sorry
+  induction' n with k hk
+  have h1 : Nat.zero = 0 := by rfl
+  rw [h1,zero_mul]
+  rw [succ_mul,hk,add_zero]
+  
 
 /-- This lemma will be useful to prove Lemma 2.3.2.
 Compare with Mathlib's {name}`Nat.mul_succ` -/
 lemma Nat.mul_succ (n m:Nat) : n * m++ = n * m + n := by
-  sorry
+  induction' n with k hk
+  have h1 : Nat.zero = 0 := by rfl
+  rw [h1,zero_mul,zero_mul,add_zero]
+  rw [succ_mul,hk,succ_mul,add_assoc,add_succ,add_assoc,add_succ m k,add_comm k m]
+  
+  
+  
+  
 
 /-- Lemma 2.3.2 (Multiplication is commutative) / Exercise 2.3.1
 Compare with Mathlib's {name}`Nat.mul_comm` -/
@@ -105,7 +116,11 @@ theorem Nat.add_mul (a b c: Nat) : (a + b)*c = a*c + b*c := by
 /-- Proposition 2.3.5 (Multiplication is associative) / Exercise 2.3.3
 Compare with Mathlib's {name}`Nat.mul_assoc` -/
 theorem Nat.mul_assoc (a b c: Nat) : (a * b) * c = a * (b * c) := by
-  sorry
+  induction' c with k hk
+  have h1 : Nat.zero = 0 := by rfl
+  rw [h1,mul_zero,mul_zero,mul_zero]
+  rw [mul_succ,hk,mul_succ,mul_add]
+  
 
 /-- (Not from textbook)  {name}`Nat` is a commutative semiring.
     This allows tactics such as {tactic}`ring` to apply to the Chapter 2 natural numbers. -/
@@ -167,9 +182,19 @@ lemma Nat.mul_cancel_right {a b c: Nat} (h: a * c = b * c) (hc: c.IsPos) : a = b
 /-- (Not from textbook) {name}`Nat` is an ordered semiring.
 This allows tactics such as {tactic}`gcongr` to apply to the Chapter 2 natural numbers. -/
 instance Nat.isOrderedRing : IsOrderedRing Nat where
-  zero_le_one := by sorry
-  mul_le_mul_of_nonneg_left := by sorry
-  mul_le_mul_of_nonneg_right := by sorry
+  zero_le_one := by
+    use 1
+    rw [zero_add]
+    
+  mul_le_mul_of_nonneg_left := by
+    rintro a _ b c ⟨r,rfl⟩
+    use (a * r)
+    ring
+  mul_le_mul_of_nonneg_right := by
+    rintro c _ a b ⟨r,rfl⟩
+    use (r * c)
+    ring
+    
 
 /-- This illustration of the {tactic}`gcongr` tactic is not from the
     textbook. -/
@@ -182,6 +207,7 @@ example (a b c d:Nat) (hab: a ≤ b) : c*a*d ≤ c*b*d := by
 Compare with Mathlib's {name}`Nat.mod_eq_iff` -/
 theorem Nat.exists_div_mod (n:Nat) {q: Nat} (hq: q.IsPos) :
     ∃ m r: Nat, 0 ≤ r ∧ r < q ∧ n = m * q + r := by
+  
   sorry
 
 /-- Definition 2.3.11 (Exponentiation for natural numbers) -/
