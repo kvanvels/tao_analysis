@@ -215,6 +215,36 @@ instance Nat.instLT : LT Nat where
 lemma Nat.le_iff (n m:Nat) : n ≤ m ↔ ∃ a:Nat, m = n + a := by rfl
 
 lemma Nat.lt_iff (n m:Nat) : n < m ↔ (∃ a:Nat, m = n + a) ∧ n ≠ m := by rfl
+lemma Nat.lt_iff' (n m:Nat) : n < m ↔ (∃ a:Nat, (n+1) + a = m) := by
+  rw [Nat.lt_iff]
+  apply Iff.intro
+  intro ⟨⟨r,h0⟩ ,h1⟩
+  rcases r with (_|predr)
+  apply False.elim
+  have h2 : Nat.zero = 0 := by rfl
+  rw [h2,add_zero] at h0
+  rw [h0] at h1
+  apply h1
+  rfl
+  use predr
+  rw [h0,succ_eq_add_one]
+  rw [add_assoc,add_comm 1 predr]
+  rintro ⟨r,h0⟩
+  apply And.intro
+  use (r + 1)
+  rw [←h0]
+  rw [add_assoc,add_comm 1 r]
+  intro h1
+  rw [h1,add_assoc,add_comm 1 r,←succ_eq_add_one] at h0
+  have h2 := L
+
+  
+  
+  
+  
+  
+  
+  
 
 /-- Compare with Mathlib's {name}`ge_iff_le`. -/
 @[symm]

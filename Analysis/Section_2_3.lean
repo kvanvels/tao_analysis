@@ -207,8 +207,58 @@ example (a b c d:Nat) (hab: a ≤ b) : c*a*d ≤ c*b*d := by
 Compare with Mathlib's {name}`Nat.mod_eq_iff` -/
 theorem Nat.exists_div_mod (n:Nat) {q: Nat} (hq: q.IsPos) :
     ∃ m r: Nat, 0 ≤ r ∧ r < q ∧ n = m * q + r := by
+  induction' n with k hk
+  use 0
+  use 0
+  apply And.intro (by rfl)
+  apply And.intro
+  · unfold IsPos at hq
+    apply And.intro
+    · use q
+      rw [zero_add]
+    intro hq0
+    rw [hq0] at hq
+    apply hq
+    rfl
+  have h1 : Nat.zero = 0 := by rfl
+  rw [h1,add_zero,zero_mul]
+  rcases hk with ⟨m,r,hmr0,hmr1,hmr2⟩
+  rcases (em (r+1 = q)) with (hr0|hr0)
+  use m+1
+  use 0
+  apply And.intro (by rfl)
+  apply And.intro
+  unfold IsPos at hq
+  apply And.intro
+  use q
+  rw [zero_add]
+  intro hqq
+  rw [hqq] at hq
+  apply hq
+  rfl
+  rw [hmr2]
+  rw [add_mul,add_zero,one_mul]
+  rw [←add_succ,succ_eq_add_one,hr0]
+  use m
+  use r + 1
+  apply And.intro (zero_le _)
+  apply And.intro
+  apply And.intro
+  rcases hmr1 with ⟨hmr10,hmr11⟩
+  rcases hmr10 with ⟨ℓ,rfl⟩
+  rcases ℓ with (_|predℓ)
+  have h1 : Nat.zero = 0 := by rfl
+  rw [h1,add_zero] at hmr11
+  apply False.elim
+  apply hmr11
+  rfl
+  use predℓ
+  rw [succ_eq_add_one]
+  ring
+  exact hr0
+  rw [hmr2,succ_eq_add_one]
+  ring
   
-  sorry
 
 /-- Definition 2.3.11 (Exponentiation for natural numbers) -/
 abbrev Nat.pow (m n: Nat) : Nat := Nat.recurse (fun _ prod ↦ prod * m) 1 n

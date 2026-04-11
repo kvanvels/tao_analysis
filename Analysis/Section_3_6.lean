@@ -31,6 +31,8 @@ namespace Chapter3
 
 export SetTheory (Set Object nat)
 
+open SetTheory.Set
+
 variable [SetTheory]
 
 /-- Definition 3.6.1 (Equal cardinality) -/
@@ -56,11 +58,20 @@ theorem SetTheory.Set.Example_3_6_3 : EqualCard nat (nat.specify (fun x ↦ Even
 
 @[refl]
 theorem SetTheory.Set.EqualCard.refl (X:Set) : EqualCard X X := by
-  sorry
+  use (fun x ↦ x)
+  apply And.intro (fun _ _ h0 ↦ h0)
+  intro x
+  
+  
+  
 
 @[symm]
 theorem SetTheory.Set.EqualCard.symm {X Y:Set} (h: EqualCard X Y) : EqualCard Y X := by
-  sorry
+  rcases h with ⟨φ,φbij⟩ 
+--  Function.inverse
+  let φinv := inverse φ 
+  
+
 
 @[trans]
 theorem SetTheory.Set.EqualCard.trans {X Y Z:Set} (h1: EqualCard X Y) (h2: EqualCard Y Z) : EqualCard X Z := by

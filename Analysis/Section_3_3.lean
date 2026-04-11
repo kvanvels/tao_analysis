@@ -1,5 +1,5 @@
 import Mathlib.Tactic
-import Analysis.Section_3_1
+import Analysis.Section_3_2
 import Analysis.Tools.ExistsUnique
 
 set_option doc.verso.suggestions false
@@ -270,7 +270,13 @@ abbrev Function.one_to_one {X Y: Set} (f: Function X Y) : Prop := ∀ x x': X, x
 
 theorem Function.one_to_one_iff {X Y: Set} (f: Function X Y) :
     f.one_to_one ↔ ∀ x x': X, f x = f x' → x = x' := by
-  peel with x hx; tauto
+  apply Iff.intro
+  intro h0 x0 x1
+  unfold one_to_one at h0
+  specialize h0 x0 x1
+  contrapose!
+  exact h0
+  
 
 /--
   Compatibility with Mathlib's {name}`Function.Injective`.  You may wish to use the {tactic}`unfold` tactic to
@@ -403,6 +409,7 @@ abbrev Function.inverse {X Y: Set} (f: Function X Y) (h: f.bijective) :
     apply f.one_to_one_iff.mp h.1
     simp [hx]
   )
+#print Function.inverse
 
 theorem Function.inverse_eval {X Y: Set} {f: Function X Y} (h: f.bijective) (y: Y) (x: X) :
     x = (f.inverse h) y ↔ f x = y := Function.eval _ _ _

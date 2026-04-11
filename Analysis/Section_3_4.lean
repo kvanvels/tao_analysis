@@ -1,5 +1,5 @@
 import Mathlib.Tactic
-import Analysis.Section_3_1
+import Analysis.Section_3_3
 
 /-!
 # Analysis I, Section 3.4: Images and inverse images
