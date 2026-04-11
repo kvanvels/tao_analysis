@@ -83,7 +83,11 @@ lemma Nat.add_succ (n m:Nat) : n + (m++) = (n + m)++ := by
 
 /-- {lean}`n++ = n + 1` (Why?). Compare with Mathlib's {name}`Nat.succ_eq_add_one` -/
 theorem Nat.succ_eq_add_one (n:Nat) : n++ = n + 1 := by
-  sorry
+  calc
+    n++ = (n + 0)++ := by rw [add_zero]
+      _ = n + 0++ := by rw [←add_succ]
+      _ = n + 1   := by rw [zero_succ]
+
 
 /-- Proposition 2.2.4 (Addition is commutative). Compare with Mathlib's {name}`Nat.add_comm` -/
 theorem Nat.add_comm (n m:Nat) : n + m = m + n := by
@@ -97,7 +101,17 @@ theorem Nat.add_comm (n m:Nat) : n + m = m + n := by
 /-- Proposition 2.2.5 (Addition is associative) / Exercise 2.2.1
     Compare with Mathlib's {name}`Nat.add_assoc`. -/
 theorem Nat.add_assoc (a b c:Nat) : (a + b) + c = a + (b + c) := by
-  sorry
+  revert c
+  apply induction
+  · rw [add_zero,add_zero]
+  intro k hk
+  calc
+    a + b + k++
+      = (a + b + k)++ := by rw [add_succ]
+    _ = (a + (b + k))++ := by rw [hk]
+    _ = a + (b + k)++ := by rw [←add_succ]
+    _ = a + (b + k++) := by rw [←add_succ]
+  
 
 /-- Proposition 2.2.6 (Cancellation law).
     Compare with Mathlib's {name}`Nat.add_left_cancel`. -/
@@ -173,7 +187,16 @@ extracts a witness `x` and a proof `hx : P x` of the property from a hypothesis 
 
 /-- Lemma 2.2.10 (unique predecessor) / Exercise 2.2.2 -/
 lemma Nat.uniq_succ_eq (a:Nat) (ha: a.IsPos) : ∃! b, b++ = a := by
-  sorry
+  rcases a with (_|preda)
+  · apply False.elim
+    unfold IsPos at ha
+    apply ha
+    rfl
+  use preda
+  apply And.intro rfl
+  intro y hy
+  exact succ.inj hy  
+
 
 /-- Definition 2.2.11 (Ordering of the natural numbers).
     This defines the {kw (of := «term_≤_»)}`≤` notation on the natural numbers. -/
@@ -220,16 +243,30 @@ example : (8:Nat) > 5 := by
 
 /-- Compare with Mathlib's {name}`Nat.lt_succ_self`. -/
 theorem Nat.succ_gt_self (n:Nat) : n++ > n := by
-  sorry
+  apply And.intro
+  use 1
+  rw [succ_eq_add_one]
+  intro h0
+  induction' n with k hk
+  have h1 := succ_ne zero
+  apply h1
+  rw [←h0]
+  rfl
+  apply hk
+  exact succ.inj h0
+
 
 /-- Proposition 2.2.12 (Basic properties of order for natural numbers) / Exercise 2.2.3
 
 (a) (Order is reflexive). Compare with Mathlib's {name}`Nat.le_refl`.-/
 theorem Nat.ge_refl (a:Nat) : a ≥ a := by
-  sorry
+  use 0
+  rw [add_zero]
+
 
 @[refl]
 theorem Nat.le_refl (a:Nat) : a ≤ a := a.ge_refl
+  
 
 /-- The refl tag allows for the {tactic}`rfl` tactic to work for inequalities. -/
 example (a b:Nat): a+b ≥ a+b := by rfl
@@ -237,13 +274,39 @@ example (a b:Nat): a+b ≥ a+b := by rfl
 /-- (b) (Order is transitive).  The {tactic}`obtain` tactic will be useful here.
     Compare with Mathlib's {name}`Nat.le_trans`. -/
 theorem Nat.ge_trans {a b c:Nat} (hab: a ≥ b) (hbc: b ≥ c) : a ≥ c := by
-  sorry
+  rcases hab with ⟨p,rfl⟩
+  rcases hbc with ⟨q,rfl⟩
+  use q + p
+  rw [add_assoc]
+  
+
+lemma L (a b : Nat) : a ≠ a + b++ := by
+  intro h0
+  induction' a with k hk
+  have h1 : Nat.zero = 0 := by rfl
+  have h2 := Nat.succ_ne b
+  rw [h1,zero_add] at h0
+  apply h2
+  rw [h0]
+  rw [Nat.succ_add] at h0
+  apply hk (Nat.succ.inj h0)
+  
+  
+  
 
 theorem Nat.le_trans {a b c:Nat} (hab: a ≤ b) (hbc: b ≤ c) : a ≤ c := Nat.ge_trans hbc hab
 
 /-- (c) (Order is anti-symmetric). Compare with Mathlib's {name}`Nat.le_antisymm`. -/
 theorem Nat.ge_antisymm {a b:Nat} (hab: a ≥ b) (hba: b ≥ a) : a = b := by
-  sorry
+  rcases hab with ⟨p,rfl⟩
+  rcases p with (_|predp)
+  have h1 : Nat.zero = 0 := rfl
+  rw [h1,add_zero]
+  
+  
+  
+  
+  
 
 /-- (d) (Addition preserves order).  Compare with Mathlib's {name}`Nat.add_le_add_right`. -/
 theorem Nat.add_ge_add_right (a b c:Nat) : a ≥ b ↔ a + c ≥ b + c := by
