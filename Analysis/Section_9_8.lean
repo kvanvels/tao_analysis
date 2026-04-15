@@ -70,7 +70,15 @@ theorem MonotoneOn.exist_inverse {a b:ℝ} (h: a < b) (f: ℝ → ℝ) (hcont: C
   (∀ x ∈ Set.Icc a b, finv (f x) = x) ∧
   ∀ y ∈ Set.Icc (f a) (f b), f (finv y) = y
    := by
-  sorry
+   apply And.intro
+   apply subset_antisymm
+   rintro ⟨y,hy⟩ h
+   apply And.intro
+   
+   
+   
+   
+
 
 /-- Example 9.8.4-/
 example {R :ℝ} (hR: R > 0) {n:ℕ} (hn: n > 0) : ∃ g : ℝ → ℝ, ∀ x ∈ Set.Icc 0 (R^n), (g x)^n = x := by

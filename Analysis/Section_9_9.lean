@@ -53,7 +53,15 @@ example (x:ℝ) :
   let δ : ℝ := 0.05
   |x-x₀| ≤ δ → |g x - g x₀| ≤ ε := by
   extract_lets g ε x₀ δ
-  sorry
+  unfold x₀ g δ 
+  intro h0 
+  have h1 := by calc
+    |(2 * x - 2 * 1)|
+      = 2 * |x -1| := by sorry
+    _ ≤ 2 * δ := by sorry
+    _ ≤ ε := by sorry
+  exact h1
+  
 
 example (x₀ x : ℝ) :
   let g : ℝ → ℝ := fun x ↦ 2*x
@@ -71,7 +79,18 @@ theorem UniformContinuousOn.iff (f: ℝ → ℝ) (X:Set ℝ) : UniformContinuous
 
 theorem ContinuousOn.ofUniformContinuousOn {X:Set ℝ} (f: ℝ → ℝ) (hf: UniformContinuousOn f X) :
   ContinuousOn f X := by
-  sorry
+    rw [Metric.continuousOn_iff]
+    rw [UniformContinuousOn.iff] at hf    
+    intro x0 hx0 ε hε
+    specialize hf (ε/2) (half_pos hε)
+    rcases hf with ⟨δ,hδ,hf⟩
+    use δ
+    apply And.intro hδ
+    intro x1 hx1 hx0x1    
+    specialize hf x0 hx0 x1 hx1
+    rw [Real.Close,Real.Close] at hf
+    specialize hf (le_of_lt hx0x1)
+    linarith  
 
 example : ¬ UniformContinuousOn (fun x:ℝ ↦ 1/x) (Set.Icc 0 2) := by
   sorry
@@ -108,6 +127,30 @@ theorem UniformContinuousOn.iff_preserves_equiv {X:Set ℝ} (f: ℝ → ℝ) :
   ∀ x y: ℕ → ℝ, (∀ n, x n ∈ X) → (∀ n, y n ∈ X) →
   (x:Sequence).equiv (y:Sequence) →
   (f ∘ x:Sequence).equiv (f ∘ y:Sequence) := by
+  rw [UniformContinuousOn.iff]
+  apply Iff.intro
+  intro h0 a b ha hb hab ε εpos
+  specialize h0 (ε/3) (by linarith)
+  specialize hab (ε/3) (by linarith)
+  rcases hab with ⟨N,hab0,hab1⟩
+  use N
+  apply And.intro (hab0)
+  clear hab0
+  rw [Real.CloseSeqs] at ⊢ hab1
+  rcases hab1 with ⟨hab10,hab11⟩
+  simp only at hab10
+  apply And.intro
+  simp only
+  rintro n hN
+  simp only at hN
+  specialize hab11 n hN
+  rw [Real.Close]
+  
+  
+  
+  
+  
+
   sorry
 
 /-- Remark 9.9.9 -/

@@ -40,8 +40,10 @@ structure PreInt where
 instance PreInt.instSetoid : Setoid PreInt where
   r a b := a.minuend + b.subtrahend = b.minuend + a.subtrahend
   iseqv := {
-    refl := by sorry
-    symm := by sorry
+    refl := fun ⟨a0,a1⟩ => rfl      
+    symm := by
+      rintro ⟨ap,am⟩ ⟨bp,bm⟩ h0
+      rw [h0]      
     trans := by
       -- This proof is written to follow the structure of the original text.
       intro ⟨ a,b ⟩ ⟨ c,d ⟩ ⟨ e,f ⟩ h1 h2; simp_all
@@ -85,6 +87,8 @@ instance Int.instAdd : Add Int where
     intro ⟨ a, b ⟩ ⟨ c, d ⟩ ⟨ a', b' ⟩ ⟨ c', d' ⟩ h1 h2
     simp [eq] at *
     omega)
+
+
 
 /-- Definition 4.1.2 (Definition of addition) -/
 theorem Int.add_eq (a b c d:ℕ) : a —— b + c —— d = (a+c)——(b+d) := Quotient.lift₂_mk _ _ _ _
@@ -147,11 +151,15 @@ example : 3 = 3 —— 0 := rfl
 example : 3 = 4 —— 1 := by rw [Int.ofNat_eq, Int.eq]
 
 /-- (Not from textbook) 0 is the only natural whose cast is 0 -/
-lemma Int.cast_eq_0_iff_eq_0 (n : ℕ) : (n : Int) = 0 ↔ n = 0 := by sorry
+lemma Int.cast_eq_0_iff_eq_0 (n : ℕ) : (n : Int) = 0 ↔ n = 0 := Int.natCast_inj n 0
 
 /-- Definition 4.1.4 (Negation of integers) / Exercise 4.1.2 -/
 instance Int.instNeg : Neg Int where
-  neg := Quotient.lift (fun ⟨ a, b ⟩ ↦ b —— a) (by sorry)
+  neg := Quotient.lift (fun ⟨ a, b ⟩ ↦ b —— a) (by
+    intro ⟨ap,am⟩ ⟨bp,bm⟩ h0
+    simp only [PreInt.eq] at h0 
+    rw [Int.eq,add_comm am,add_comm bm,h0]  
+  )
 
 theorem Int.neg_eq (a b:ℕ) : -(a —— b) = b —— a := rfl
 
@@ -189,7 +197,14 @@ theorem Int.not_pos_neg (x:Int) : x.IsPos ∧ x.IsNeg → False := by
 
 /-- Proposition 4.1.6 (laws of algebra) / Exercise 4.1.4 -/
 instance Int.instAddGroup : AddGroup Int :=
-  AddGroup.ofLeftAxioms (by sorry) (by sorry) (by sorry)
+  AddGroup.ofLeftAxioms
+    (by --addition is associative
+     rintro ⟨ap,am⟩ ⟨bp,bm⟩ ⟨cp,cm⟩
+     apply Quot.sound
+     simp only [Setoid.r]
+     abel_nf
+     
+    ) (by sorry) (by sorry)
 
 /-- Proposition 4.1.6 (laws of algebra) / Exercise 4.1.4 -/
 instance Int.instAddCommGroup : AddCommGroup Int where
