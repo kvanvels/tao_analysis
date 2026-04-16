@@ -6,7 +6,7 @@ set_option doc.verso.suggestions false
 /-!
 # Analysis I, Section 4.2
 
-This file is a translation of Section 4.2 of Analysis I to Lean 4.
+nThis file is a translation of Section 4.2 of Analysis I to Lean 4.
 All numbering refers to the original text.
 
 I have attempted to make the translation as faithful a paraphrasing as possible of the original
@@ -47,9 +47,26 @@ structure PreRat where
 instance PreRat.instSetoid : Setoid PreRat where
   r a b := a.numerator * b.denominator = b.numerator * a.denominator
   iseqv := {
-    refl := by sorry
-    symm := by sorry
-    trans := by sorry
+    refl := by
+      intro ⟨xn,xd,hxd⟩
+      rfl
+    symm := by
+      intro ⟨xn,xd,hxd⟩ ⟨yn,yd,hyd⟩ h0
+      dsimp at *
+      rw [h0]      
+      
+    trans := by
+      intro ⟨xn,xd,hxd⟩ ⟨yn,yd,hyd⟩ ⟨zn,zd,hzd⟩ h0 h1
+      dsimp at *
+      have h2 := by calc
+       (xn* zd)*(yd)
+         = (xn * yd) * zd := by ring_nf
+       _ = (yn * xd) * zd := by rw [h0]
+       _ = (yn * zd) * xd := by ring_nf
+       _ = (zn * yd) * xd := by rw [h1]
+       _ = (zn * xd) * yd := by ring_nf
+      clear hxd hzd h0 h1
+      exact (Int.mul_eq_mul_right_iff hyd).mp h2      
     }
 
 @[simp]
@@ -72,7 +89,9 @@ theorem Rat.eq (a c:ℤ) {b d:ℤ} (hb: b ≠ 0) (hd: d ≠ 0): a // b = c // d 
 theorem Rat.eq_diff (n:Rat) : ∃ a b, b ≠ 0 ∧ n = a // b := by
   apply Quotient.ind _ n; intro ⟨ a, b, h ⟩
   refine ⟨ a, b, h, ?_ ⟩
-  simp [formalDiv, h]
+  sorry
+  
+  
 
 /--
   Decidability of equality. Hint: modify the proof of {lean}`DecidableEq Int` from the previous
@@ -98,7 +117,24 @@ theorem Rat.add_eq (a c:ℤ) {b d:ℤ} (hb: b ≠ 0) (hd: d ≠ 0) :
 
 /-- Lemma 4.2.3 (Multiplication well-defined) -/
 instance Rat.mul_inst : Mul Rat where
-  mul := Quotient.lift₂ (fun ⟨ a, b, h1 ⟩ ⟨ c, d, h2 ⟩ ↦ (a*c) // (b*d)) (by sorry)
+  mul := Quotient.lift₂ (fun ⟨ a, b, h1 ⟩ ⟨ c, d, h2 ⟩ ↦ (a*c) // (b*d))
+     (by
+       rintro ⟨an,ad,ha⟩ ⟨a'n,a'd,ha'⟩ ⟨bn,bd,hbd⟩ ⟨b'n,b'd,hb'd⟩ h0 h1       
+       rw [PreRat.eq] at h0 h1
+       dsimp
+       rw [Rat.formalDiv]
+       have hadd : ad * a'd ≠ 0 := by sorry
+       rw [dif_pos]
+       have hbdd : bd * b'd ≠ 0 := by sorry
+       rw [Rat.formalDiv]
+       rw [dif_pos]
+       rw [Quotient.eq]
+       sorry
+       sorry
+       sorry
+      )
+   
+
 
 /-- Definition 4.2.2 (Multiplication of rationals) -/
 theorem Rat.mul_eq (a c:ℤ) {b d:ℤ} (hb: b ≠ 0) (hd: d ≠ 0) :
@@ -111,7 +147,10 @@ instance Rat.neg_inst : Neg Rat where
 
 /-- Definition 4.2.2 (Negation of rationals) -/
 theorem Rat.neg_eq (a:ℤ) {b:ℤ} (hb: b ≠ 0) : - (a // b) = (-a) // b := by
-  convert Quotient.lift_mk _ _ _ <;> simp [hb]
+  convert Quotient.lift_mk _ _ _
+  simp [hb]
+  rw [dif_pos]
+  exact hb
 
 /-- Embedding the integers in the rationals -/
 instance Rat.instIntCast : IntCast Rat where
@@ -256,6 +295,10 @@ def Rat.isNeg (q:Rat) : Prop := ∃ r:Rat, r.isPos ∧ q = -r
 /-- Lemma 4.2.7 (trichotomy of rationals) / Exercise 4.2.4 -/
 theorem Rat.trichotomous (x:Rat) : x = 0 ∨ x.isPos ∨ x.isNeg := by sorry
 
+
+  
+  
+
 /-- Lemma 4.2.7 (trichotomy of rationals) / Exercise 4.2.4 -/
 theorem Rat.not_zero_and_pos (x:Rat) : ¬(x = 0 ∧ x.isPos) := by sorry
 
@@ -264,6 +307,24 @@ theorem Rat.not_zero_and_neg (x:Rat) : ¬(x = 0 ∧ x.isNeg) := by sorry
 
 /-- Lemma 4.2.7 (trichotomy of rationals) / Exercise 4.2.4 -/
 theorem Rat.not_pos_and_neg (x:Rat) : ¬(x.isPos ∧ x.isNeg) := by sorry
+
+theorem Rat.myTrichotomous (x : Rat) :
+  ((x = 0) ∧ (¬x.isPos) ∧ (¬(x.isNeg))) ∨
+  ((x ≠ 0) ∧ (x.isPos) ∧ (¬(x.isNeg))) ∨
+  ((x ≠ 0) ∧ (¬x.isPos) ∧ (x.isNeg)) := by
+  have h1 := Rat.not_zero_and_pos x
+  have h2 := Rat.not_zero_and_neg x
+  have h3 := Rat.not_pos_and_neg x  
+  
+  rcases Rat.trichotomous x with (hz|hpos|hneg)
+  tauto
+  tauto
+  tauto
+
+  
+  
+  
+  
 
 /-- Definition 4.2.8 (Ordering of the rationals) -/
 instance Rat.instLT : LT Rat where

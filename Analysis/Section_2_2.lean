@@ -236,9 +236,7 @@ lemma Nat.lt_iff' (n m:Nat) : n < m ↔ (∃ a:Nat, (n+1) + a = m) := by
   rw [add_assoc,add_comm 1 r]
   intro h1
   rw [h1,add_assoc,add_comm 1 r,←succ_eq_add_one] at h0
-  have h2 := L
-
-  
+  sorry
   
   
   
@@ -332,7 +330,9 @@ theorem Nat.ge_antisymm {a b:Nat} (hab: a ≥ b) (hba: b ≥ a) : a = b := by
   rcases hab with ⟨p,rfl⟩
   rcases p with (_|predp)
   have h1 : Nat.zero = 0 := rfl
-  rw [h1,add_zero]  
+  rw [h1,add_zero]
+  sorry
+
 
 /-- (d) (Addition preserves order).  Compare with Mathlib's {name}`Nat.add_le_add_right`. -/
 theorem Nat.add_ge_add_right (a b c:Nat) : a ≥ b ↔ a + c ≥ b + c := by
@@ -612,13 +612,8 @@ theorem Nat.induction_from {n:Nat} {P: Nat → Prop} (hind: ∀ m, P m → P (m+
   exact hstart
   rw [add_succ]
   exact hind (n+k) hk
-
-
   
   
-  
-
-  sorry
 
 
 

@@ -61,6 +61,7 @@ theorem SetTheory.Set.EqualCard.refl (X:Set) : EqualCard X X := by
   use (fun x ↦ x)
   apply And.intro (fun _ _ h0 ↦ h0)
   intro x
+  sorry
   
   
   
@@ -69,8 +70,8 @@ theorem SetTheory.Set.EqualCard.refl (X:Set) : EqualCard X X := by
 theorem SetTheory.Set.EqualCard.symm {X Y:Set} (h: EqualCard X Y) : EqualCard Y X := by
   rcases h with ⟨φ,φbij⟩ 
 --  Function.inverse
-  let φinv := inverse φ 
-  
+--  let φinv := inverse φ 
+  sorry
 
 
 @[trans]

@@ -27,6 +27,8 @@ Users of the companion who have completed the exercises in this section are welc
 namespace Chapter5
 
 
+
+
 @[ext]
 structure DedekindCut where
   E : Set ℚ

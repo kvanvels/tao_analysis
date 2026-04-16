@@ -320,7 +320,10 @@ theorem Sequence.IsCauchy.harmonic : (mk' 1 (fun n ↦ (1:ℚ)/n)).IsCauchy := b
     observe : (1/ε) > 0
     observe : (N:ℚ) > 0
     norm_cast at this
-  refine ⟨ N, by norm_cast, ?_ ⟩
+--  refine ⟨ N, by norm_cast, ?_ ⟩
+  use N
+  apply And.intro
+  norm_cast
   intro j hj k hk
   lift j to ℕ using (by linarith)
   lift k to ℕ using (by linarith)

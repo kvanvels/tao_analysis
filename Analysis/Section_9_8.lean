@@ -74,6 +74,10 @@ theorem MonotoneOn.exist_inverse {a b:ℝ} (h: a < b) (f: ℝ → ℝ) (hcont: C
    apply subset_antisymm
    rintro ⟨y,hy⟩ h
    apply And.intro
+   sorry
+   sorry
+   sorry
+   sorry
    
    
    

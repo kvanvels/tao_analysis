@@ -145,12 +145,7 @@ theorem UniformContinuousOn.iff_preserves_equiv {X:Set ℝ} (f: ℝ → ℝ) :
   simp only at hN
   specialize hab11 n hN
   rw [Real.Close]
-  
-  
-  
-  
-  
-
+  sorry
   sorry
 
 /-- Remark 9.9.9 -/

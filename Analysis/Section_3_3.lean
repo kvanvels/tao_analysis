@@ -276,6 +276,8 @@ theorem Function.one_to_one_iff {X Y: Set} (f: Function X Y) :
   specialize h0 x0 x1
   contrapose!
   exact h0
+  sorry
+  
   
 
 /--

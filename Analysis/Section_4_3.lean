@@ -40,10 +40,18 @@ namespace Section_4_3
 /-- Definition 4.3.1 (Absolute value) -/
 abbrev abs (x:ℚ) : ℚ := if x > 0 then x else (if x < 0 then -x else 0)
 
-theorem abs_of_pos {x: ℚ} (hx: 0 < x) : abs x = x := by grind
+theorem abs_of_pos {x: ℚ} (hx: 0 < x) : abs x = x := by
+  unfold abs
+  rw [if_pos hx]
+    
 
 /-- Definition 4.3.1 (Absolute value) -/
-theorem abs_of_neg {x: ℚ} (hx: x < 0) : abs x = -x := by grind
+theorem abs_of_neg {x: ℚ} (hx: x < 0) : abs x = -x := by
+  unfold abs
+  have h1 : ¬(0 < x) := by sorry
+  rw [if_neg h1]
+  rw [if_pos hx]
+  
 
 /-- Definition 4.3.1 (Absolute value) -/
 theorem abs_of_zero : abs 0 = 0 := rfl
@@ -52,9 +60,8 @@ theorem abs_of_zero : abs 0 = 0 := rfl
   (Not from textbook) This definition of absolute value agrees with the Mathlib one.
   Henceforth we use the Mathlib absolute value.
 -/
-theorem abs_eq_abs (x: ℚ) : abs x = |x| := by
-  sorry
 
+theorem abs_eq_abs (x: ℚ) : abs x = |x| := by sorry
 abbrev dist (x y : ℚ) := |x - y|
 
 /--
@@ -182,16 +189,63 @@ example : (0:ℚ)^0 = 1 := pow_zero 0
 lemma pow_succ (x:ℚ) (n:ℕ) : x^(n+1) = x^n * x := _root_.pow_succ x n
 
 /-- Proposition 4.3.10(a) (Properties of exponentiation, I) / Exercise 4.3.3 -/
-theorem pow_add (x:ℚ) (m n:ℕ) : x^n * x^m = x^(n+m) := by sorry
+theorem pow_add (x:ℚ) (m n:ℕ) : x^n * x^m = x^(n+m) := by
+ induction' n with k hk
+ rw [pow_zero,one_mul,zero_add]
+ rw [pow_succ,mul_comm (x ^ k) x,mul_assoc,hk,add_assoc,add_comm 1 m,←add_assoc,pow_succ,mul_comm]
+ 
 
 /-- Proposition 4.3.10(a) (Properties of exponentiation, I) / Exercise 4.3.3 -/
-theorem pow_mul (x:ℚ) (m n:ℕ) : (x^n)^m = x^(n*m) := by sorry
+theorem pow_mul (x:ℚ) (m n:ℕ) : (x^n)^m = x^(n*m) := by
+  induction' m with k hk
+  rw [pow_zero,mul_zero,pow_zero]
+  rw [pow_succ,hk]
+  rw [pow_add x (n) (n*k) ]
+  rw [mul_add,mul_one]
+  
 
 /-- Proposition 4.3.10(a) (Properties of exponentiation, I) / Exercise 4.3.3 -/
-theorem mul_pow (x y:ℚ) (n:ℕ) : (x*y)^n = x^n * y^n := by sorry
+theorem mul_pow (x y:ℚ) (n:ℕ) : (x*y)^n = x^n * y^n := by
+  induction' n with k hk
+  rw [pow_zero,pow_zero,pow_zero,mul_one]
+  rw [pow_succ,hk,pow_succ,pow_succ]
+  ring
 
 /-- Proposition 4.3.10(b) (Properties of exponentiation, I) / Exercise 4.3.3 -/
-theorem pow_eq_zero (x:ℚ) (n:ℕ) (hn : 0 < n) : x^n = 0 ↔ x = 0 := by sorry
+theorem pow_eq_zero (x:ℚ) (n:ℕ) (hn : 0 < n) : x^n = 0 ↔ x = 0 := by
+  induction' n using Nat.strong_induction_on with k hk
+  rcases k with (_|predk)
+  apply False.elim
+  linarith
+  apply Iff.intro
+  intro h0
+  rw [pow_succ,mul_eq_zero] at h0
+  rcases h0 with (h0|h0)
+  specialize hk predk (by linarith)
+  rcases predk with (_|ppredk)
+  apply False.elim
+  rw [pow_zero] at h0
+  linarith
+  specialize hk (by linarith)
+  rwa [hk] at h0
+  assumption
+  intro h0
+  rw [pow_succ]
+  rw [h0,mul_zero]
+
+theorem pow_eq_zero_1 (x:ℚ) (n:ℕ) (hn : 0 < n) : x^n = 0 ↔ x = 0 := by
+  induction' n with k hk
+  apply False.elim (by linarith)
+  clear hn
+  induction' k with ℓ hℓ
+  rw [zero_add,pow_one]
+  rw [←pow_add,pow_one,mul_eq_zero]
+  specialize hk (by linarith)
+  rw [hk]
+  tauto
+  
+  
+  
 
 /-- Proposition 4.3.10(c) (Properties of exponentiation, I) / Exercise 4.3.3 -/
 theorem pow_nonneg {x:ℚ} (n:ℕ) (hx: x ≥ 0) : x^n ≥ 0 := by sorry
@@ -206,7 +260,8 @@ theorem pow_ge_pow (x y:ℚ) (n:ℕ) (hxy: x ≥ y) (hy: y ≥ 0) : x^n ≥ y^n 
 theorem pow_gt_pow (x y:ℚ) (n:ℕ) (hxy: x > y) (hy: y ≥ 0) (hn: n > 0) : x^n > y^n := by sorry
 
 /-- Proposition 4.3.10(d) (Properties of exponentiation, I) / Exercise 4.3.3 -/
-theorem pow_abs (x:ℚ) (n:ℕ) : |x|^n = |x^n| := by sorry
+theorem pow_abs (x:ℚ) (n:ℕ) : |x|^n = |x^n| := by
+  sorry
 
 /--
   Definition 4.3.11 (Exponentiation to a negative number).
@@ -246,4 +301,20 @@ theorem zpow_inj {x y:ℚ} {n:ℤ} (hx: x > 0) (hy : y > 0) (hn: n ≠ 0) (hxy: 
 theorem zpow_abs (x:ℚ) (n:ℤ) : |x|^n = |x^n| := by sorry
 
 /-- Exercise 4.3.5 -/
-theorem two_pow_geq (N:ℕ) : 2^N ≥ N := by sorry
+theorem two_pow_geq (N:ℕ) : (2)^N ≥ N := by
+  induction' N with h hk
+  
+  rw [Nat.pow_zero]
+  linarith
+  rw [Nat.pow_add,Nat.pow_one]
+  rcases h with (_|predh)
+  rw [Nat.pow_zero,one_mul,zero_add]
+  linarith
+  have h1 := by calc 
+    2^(predh + 1) * 2
+      ≥  (predh + 1) * 2 := by linarith
+    _ = predh * 2 + 1 * 2 := by rw [Nat.add_mul]
+    _ = 2 * predh + 2 := by ring_nf
+    _ ≥ predh + 2 := by linarith
+    _ = predh + 1 + 1 := by linarith
+  exact h1

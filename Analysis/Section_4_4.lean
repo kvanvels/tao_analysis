@@ -24,8 +24,46 @@ Users of the companion who have completed the exercises in this section are welc
 
 -/
 
+
+
+theorem Nat.div_mul_le (a b : ℕ) : 
+  b * (a / b) ≤ a := by
+  have h1 := Nat.mod_add_div a b
+  nth_rewrite 2 [←h1]
+  exact Nat.le_add_left (b * (a/b)) (a %b)
+
+theorem Int.div_mul_le (a : ℤ) (b : ℕ) (h0 : b ≠ 0): 
+  b * (a / b) ≤ a := by
+  
+  have h1 := Int.emod_add_mul_ediv a b
+  nth_rewrite 2 [←h1]
+  have h2 := @Int.emod_nonneg a (b:ℤ) ?_  
+  linarith
+  intro h2
+  simp only [ne_eq] at h0
+  simp only [natCast_eq_zero] at h2
+  exact h0 h2
+    
+  
+  
+  
+  
+
+
 /-- Proposition 4.4.1 (Interspersing of integers by rationals) / Exercise 4.4.1 -/
-theorem Rat.between_int (x:ℚ) : ∃! n:ℤ, n ≤ x ∧ x < n+1 := by
+theorem Rat.between_int (x:ℚ) : ∃ n:ℤ, n ≤ x ∧ x < (n+1) := by
+  rcases x with ⟨xn,xd,hx0,hx1⟩
+  use xn/xd
+  apply And.intro
+  dsimp
+  rw [Rat.le_iff]
+  dsimp
+  rw [mul_one]
+  rw [mul_comm]
+  apply Int.div_mul_le
+  exact hx0
+  rw [Rat.lt_iff]
+  dsimp  
   sorry
 
 theorem Nat.exists_gt (x:ℚ) : ∃ n:ℕ, n > x := by
@@ -33,6 +71,7 @@ theorem Nat.exists_gt (x:ℚ) : ∃ n:ℕ, n > x := by
 
 /-- Proposition 4.4.3 (Interspersing of rationals) -/
 theorem Rat.exists_between_rat {x y:ℚ} (h: x < y) : ∃ z:ℚ, x < z ∧ z < y := by
+  
   -- This proof is written to follow the structure of the original text.
   -- The reader is encouraged to find shorter proofs, for instance
   -- using Mathlib's `linarith` tactic.
@@ -51,7 +90,11 @@ theorem Nat.no_infinite_descent : ¬ ∃ a:ℕ → ℕ, ∀ n, a (n+1) < a n := 
 /-- Exercise 4.4.2 (b) -/
 def Int.infinite_descent : Decidable (∃ a:ℕ → ℤ, ∀ n, a (n+1) < a n) := by
   -- the first line of this construction should be either `apply isTrue` or `apply isFalse`.
-  sorry
+  apply isTrue
+  use (fun n : ℕ => -(n:ℤ))
+  intro n
+  dsimp
+  linarith
 
 /-- Exercise 4.4.2 (b) -/
 def Rat.pos_infinite_descent : Decidable (∃ a:ℕ → {x: ℚ // 0 < x}, ∀ n, a (n+1) < a n) := by
@@ -61,11 +104,54 @@ def Rat.pos_infinite_descent : Decidable (∃ a:ℕ → {x: ℚ // 0 < x}, ∀ n
 #check even_iff_exists_two_mul
 #check odd_iff_exists_bit1
 
+theorem Nat.succ_even_of_odd (n : ℕ) : Odd n →  Even ( n + 1) := by
+  rintro ⟨ℓ,rfl⟩
+  use (ℓ + 1)  
+  ring_nf
+
+
+theorem Nat.succ_odd_of_even (n : ℕ) : Even n → Odd (n + 1) := by
+  rintro ⟨ℓ,rfl⟩
+  use ℓ
+  ring_nf
+  
+theorem Nat.succ_not_odd_of_odd (n : ℕ) : Odd n → ¬(Odd n.succ) := by sorry
+
 theorem Nat.even_or_odd'' (n:ℕ) : Even n ∨ Odd n := by
-  sorry
+  induction' n using Nat.strong_induction_on with k hk
+  induction' k with ℓ hℓ
+  apply Or.inl
+  --have h1 := even_iff_exists_two_mul
+--  rw [Nat.even_iff]
+  use 0
+  specialize hk ℓ (by linarith)
+  rcases hk with (hk|hk)
+  apply Or.inr
+  have h1 := Nat.succ_odd_of_even ℓ hk
+  exact h1
+  apply Or.inl
+  have h1 := Nat.succ_even_of_odd ℓ hk
+  exact h1
+  
+  
+  
+  
 
 theorem Nat.not_even_and_odd (n:ℕ) : ¬ (Even n ∧ Odd n) := by
-  sorry
+  intro ⟨⟨ℓ, hℓ⟩,⟨s,hs⟩⟩
+  rw [←two_mul] at hℓ
+  have h1 : n % 2 = 0 := by
+    rw [hℓ]
+    simp only [mul_mod_right]
+  have h2 : n%2 = 1 := by
+    rw [hs]
+    simp only [mul_add_mod_self_left 2 s 1, reduceMod]
+  rw [h2] at h1
+  linarith
+
+  
+  
+  
 
 #check Nat.rec
 

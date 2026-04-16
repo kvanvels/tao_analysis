@@ -2,6 +2,7 @@ import Mathlib.Tactic
 import Analysis.Section_5_1
 
 
+
 /-!
 # Analysis I, Section 5.2: Equivalent Cauchy sequences
 
@@ -81,6 +82,7 @@ lemma Sequence.equiv_example :
   -- This proof is perhaps more complicated than it needs to be; a shorter version may be
   -- possible that is still faithful to the original text.
   Equiv (fun n:ℕ ↦ (1:ℚ)+10^(-(n:ℤ)-1)) (fun n:ℕ ↦ (1:ℚ)-10^(-(n:ℤ)-1)) := by
+  
   set a := fun n:ℕ ↦ (1:ℚ)+10^(-(n:ℤ)-1)
   set b := fun n:ℕ ↦ (1:ℚ)-10^(-(n:ℤ)-1)
   rw [equiv_iff]
@@ -91,6 +93,7 @@ lemma Sequence.equiv_example :
     _ = _ := abs_of_nonneg (by positivity)
   have hab' (N:ℕ) : ∀ n ≥ N, |a n - b n| ≤ 2 * 10 ^(-(N:ℤ)-1) := by
     intro n hn; rw [hab n]; gcongr; norm_num
+  
   have hN : ∃ N:ℕ, 2 * (10:ℚ) ^(-(N:ℤ)-1) ≤ ε := by
     have hN' (N:ℕ) : 2 * (10:ℚ)^(-(N:ℤ)-1) ≤ 2/(N+1) := calc
       _ = 2 / (10:ℚ)^(N+1) := by
@@ -110,12 +113,87 @@ lemma Sequence.equiv_example :
   choose N hN using hN; use N; intro n hn
   linarith [hab' N n hn]
 
+
+theorem Sequence.isCauchy_of_equiv_helper {a b: ℕ → ℚ} (hab: Equiv a b) :
+    (a:Sequence).IsCauchy →  (b:Sequence).IsCauchy := by
+    rw [equiv_iff] at hab
+    intro h0 ε εpos
+    specialize h0 (ε/3) (by positivity)
+    rcases h0 with ⟨Na,h0Na,h0⟩     
+    specialize hab (ε/3) (by positivity)    
+    rcases hab with ⟨N,hab⟩
+    
+    use (max Na N)
+    simp only [n0_coe]
+    rw [n0_coe] at h0Na
+    apply And.intro
+    have h1 : max Na N ≥ Na :=  Int.le_max_left Na N
+    exact le_trans h0Na h1
+    intro n hn m hm
+    dsimp
+    rw [if_pos,if_pos]
+    unfold Rat.Close
+    dsimp at hn hm
+    let bS := (b:Sequence)
+    let aS := (a : Sequence)
+    have h1 : bS n - bS m = (bS n - aS n) + (aS n - aS m) + (aS m - bS m) := by ring_nf
+    unfold bS at h1
+    rw [h1]
+    sorry
+    sorry
+    sorry
+    
+    
+
+    
+    
+
 /-- Exercise 5.2.1 -/
 theorem Sequence.isCauchy_of_equiv {a b: ℕ → ℚ} (hab: Equiv a b) :
-    (a:Sequence).IsCauchy ↔ (b:Sequence).IsCauchy := by sorry
+    (a:Sequence).IsCauchy ↔ (b:Sequence).IsCauchy := by
+    apply Iff.intro
+    have h1 := Sequence.isCauchy_of_equiv_helper hab
+    exact h1
+    have hba : Equiv b a := by
+      intro ε εpos
+      specialize hab ε εpos
+      rcases hab with ⟨N,hN⟩
+      use N
+      intro n hn1 hn2
+      unfold Rat.Close
+      rw [abs_sub_comm]
+      specialize hN n hn2 hn1
+      exact hN
+    sorry
+
+
+    
+    
+theorem Sequence.isBounded_of_eventuallyClose_helper {ε:ℚ} {a b: ℕ → ℚ} (hab: ε.EventuallyClose a b) :
+    (a:Sequence).IsBounded →  (b:Sequence).IsBounded := by
+  rintro ⟨M,hM0,hM1⟩
+  unfold BoundedBy at hM1
+  rcases hab with ⟨N,hN⟩
+--  let Mstar : ℚ := ⊔ n : {j : ℕ \\ j < N}, (b:Sequence) n
+  use (M + max 0 ε) 
+  apply And.intro
+  have h1 : max 0 ε ≥ 0 := by sorry
+  linarith
+  intro z
+  specialize hN z (by sorry) (by sorry)
+  unfold Rat.Close at hN
+  dsimp at hN
+  simp only [n0_coe] at *
+  
+  have h1 := by calc
+    |(b:Sequence) z|
+      = |((b:Sequence) z - (a:Sequence) z) + (a:Sequence) z| := by ring_nf
+    _ ≤ |((b:Sequence) z - (a:Sequence) z)| + |(a:Sequence) z| := abs_add_le _ _
+  sorry
+      
 
 /-- Exercise 5.2.2 -/
 theorem Sequence.isBounded_of_eventuallyClose {ε:ℚ} {a b: ℕ → ℚ} (hab: ε.EventuallyClose a b) :
-    (a:Sequence).IsBounded ↔ (b:Sequence).IsBounded := by sorry
-
+    (a:Sequence).IsBounded ↔ (b:Sequence).IsBounded := by
+  sorry
 end Chapter5
