@@ -16,6 +16,7 @@ open Filter
 /-- Identification with the Cauchy sequence support in Mathlib/Algebra/Order/CauSeq/Basic -/
 theorem Chapter6.Sequence.isCauchy_iff_isCauSeq (a: ℕ → ℝ) :
     (a:Sequence).IsCauchy ↔ IsCauSeq _root_.abs a := by
+  
   simp_rw [IsCauchy.coe, Real.dist_eq, IsCauSeq]
   constructor <;> intro h ε hε <;> have ⟨ N, h ⟩ := h _ (half_pos hε) <;> use N
   . intro n hn; linarith [h n hn N (by rfl)]

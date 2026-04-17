@@ -28,10 +28,93 @@ abbrev BddOn (f:ℝ → ℝ) (X:Set ℝ) : Prop := ∃ M, ∀ x ∈ X, |f x| ≤
 
 /-- Remark 9.6.2 -/
 theorem BddOn.iff (f:ℝ → ℝ) (X:Set ℝ) : BddOn f X ↔ BddAboveOn f X ∧ BddBelowOn f X := by
-  sorry
+  apply Iff.intro
+  rintro ⟨M,h0⟩
+  apply And.intro
+  use M
+  intro x hX
+  specialize h0 x hX
+  have h1 : f x ≤ |f x| := le_abs_self (f x)
+  exact h1.trans h0
+  use (M)
+  intro x hX
+  specialize h0 x hX
+  have h1 : -M ≤ -|f x| := by exact neg_le_neg_iff.mpr h0
+  have h2 : -(f x) ≤ |f x| := neg_le_abs (f x)
+  linarith
+  rintro ⟨⟨Ma,ha⟩,⟨Mb,hb⟩ ⟩    
+  use max |Ma| |Mb|
+  intro x hx
+  specialize ha x hx
+  specialize hb x hx
+  have h1 : |f x| = max (f x) (-f x) := by
+    unfold abs
+    rfl
+  rw [h1]
+  rw [max_le_iff]
+  apply And.intro
+  rw [le_max_iff]
+  apply Or.inl
+  unfold abs
+  rw [le_max_iff]
+  apply Or.inl
+  exact ha
+  rw [le_max_iff]
+  apply Or.inr
+  unfold abs
+  rw [le_max_iff]
+  apply Or.inl
+  linarith
+  
+  
 
 theorem BddOn.iff' (f:ℝ → ℝ) (X:Set ℝ) :  BddOn f X ↔ Bornology.IsBounded (f '' X) := by
-  sorry
+  apply Iff.intro
+  intro ⟨M,h0⟩
+  use 2*M
+  intro y0 hy0 y1 hy1
+  simp only [compl_compl] at hy0 hy1
+  rcases hy0 with ⟨x0,hx00,hx01⟩
+  rcases hy1 with ⟨x1,hx10,hx11⟩
+  dsimp
+  rw [←hx01,←hx11]
+  have hz := by calc |f x0 - f x1|
+      _ = |f x0 + (-(f x1))| := by rw [sub_eq_add_neg (f x0) (f x1)]
+      _ ≤ |f x0| + |-f x1| := abs_add_le (f x0) (- f x1)
+      _ = |f x0| + |f x1| := by rw [abs_neg]        
+      _ ≤ M + M := add_le_add (h0 x0 hx00) (h0 x1 hx10)        
+      _ = 2 * M := by rw [two_mul]
+  exact hz
+  rintro ⟨M,h0⟩
+  rcases (em (X ⊆ ∅)) with (hXmt|hXnmt)
+  use M
+  intro x hx
+  apply False.elim
+  exact hXmt hx
+  have hXnmt' : X ≠ ∅ := by
+    intro h0
+    apply hXnmt
+    rw [h0]
+  clear hXnmt
+  have hθ : ∃ x : ℝ, x ∈ X := by
+    rw [←Set.nonempty_def]
+    exact Set.nonempty_iff_ne_empty.mpr hXnmt'
+  rcases hθ with ⟨θ,hθ⟩
+  use M + |f θ|
+  intro x hX
+  simp_rw [compl_compl] at h0
+  specialize @h0 (f θ) ?_
+  use θ 
+  specialize @h0 (f x) ?_
+  use x
+  have hz := by calc
+    |f x| = |(f x - f θ) + f θ| := by ring_nf
+        _ ≤ |f x - f θ| + |f θ| := abs_add_le _ _
+        _ = |f θ - f x| + |f θ| := by rw [abs_sub_comm]
+        _ ≤ M + |f θ| := by linarith
+  exact hz  
+  
+  
 
 theorem BddOn.of_bounded {f :ℝ → ℝ} {X: Set ℝ} {M:ℝ} (h: ∀ x ∈ X, |f x| ≤ M) : BddOn f X := by use M
 
@@ -45,7 +128,16 @@ example : ContinuousOn (fun x:ℝ ↦ 1/x) (.Ioo 0 1) := by sorry
 
 example : ¬ BddOn (fun x:ℝ ↦ 1/x) (.Ioo 0 1) := by sorry
 
-theorem why_7_6_3 {n: ℕ → ℕ} (hn: StrictMono n) (j:ℕ) : n j ≥ j := by sorry
+theorem why_7_6_3 {n: ℕ → ℕ} (hn: StrictMono n) (j:ℕ) : n j ≥ j := by
+  induction' j with k hk
+  apply zero_le
+  have hz := by calc
+     n (k+1)
+       > n k := @hn k (k+1) (by linarith)
+     _ ≥ k := hk
+  linarith
+  
+      
 
 /-- Lemma 9.6.3 -/
 theorem BddOn.of_continuous_on_compact {a b:ℝ} (_h:a < b) {f:ℝ → ℝ} (hf: ContinuousOn f (.Icc a b) ) :

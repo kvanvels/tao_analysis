@@ -25,7 +25,8 @@ namespace Chapter8
 /-- Theorem 8.3.1 -/
 theorem EqualCard.power_set_false (X:Type) : ¬ EqualCard X (Set X) := by
   -- This proof is written to follow the structure of the original text.
-  by_contra!; choose f hf using this
+  by_contra! h0
+  choose f hf using h0
   set A := {x | x ∉ f x }; choose x hx using hf.2 A
   by_cases h : x ∈ A <;> have h' := h
   . simp [A] at h'; simp_all
@@ -167,7 +168,7 @@ theorem Schroder_Bernstein_lemma {X: Type} {A B C: Set X} (hAB: A ⊆ B) (hBC: B
   Set.univ.PairwiseDisjoint D ∧
   let g : A → B := fun x ↦ if h: x ∈ ⋃ n, D n ∧ ∃ y:B, f ⟨↑y, hBC y.property⟩ = x then h.2.choose else ⟨ ↑x, hAB x.property ⟩
   Function.Bijective g
-  := by
+  := by  
   sorry
 
 abbrev LeCard (X Y: Type) : Prop := ∃ f: X → Y, Function.Injective f

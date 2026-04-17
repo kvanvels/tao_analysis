@@ -36,15 +36,50 @@ theorem EqualCard.iff {X Y : Type} : EqualCard X Y ↔ Nonempty (X ≃ Y) := by
 theorem EqualCard.iff' {X Y : Type} : EqualCard X Y ↔ Cardinal.mk X = Cardinal.mk Y := by
   simp [Cardinal.eq, iff]
 
-theorem EqualCard.refl (X : Type) : EqualCard X X := sorry
+theorem EqualCard.refl (X : Type) : EqualCard X X := by
+  use (fun x ↦ x)
+  apply And.intro
+  intro x0 x1 h0
+  exact h0
+  intro x0
+  use x0
+  
+  
+  
 
 theorem EqualCard.symm {X Y : Type} (hXY : EqualCard X Y) : EqualCard Y X := by
-  sorry
+  rcases hXY with ⟨φ,hφ⟩
+  rw [Function.bijective_iff_has_inverse] at hφ
+  rcases hφ with ⟨φinv,h0,h1⟩
+  use φinv
+  apply And.intro
+  intro y0 y1 hinj
+  have h1 := by calc
+    y0 = id y0 := by sorry
+     _ = (φ ∘ φinv) y0 := by sorry
+     _ = φ (φinv y0) := by sorry
+     _ = φ (φinv y1) := by rw [hinj]
+     _ = (φ ∘ φinv) y1 := by sorry
+     _ = id y1 := by sorry
+     _ = y1 := by sorry
+  exact h1
+  intro x
+  use (φ x)
+  exact ((fun a ↦ h0 x) ∘ φ) x
+     
+  
+  
+  
+  
 
 theorem EqualCard.trans {X Y Z : Type} (hXY : EqualCard X Y) (hYZ : EqualCard Y Z) :
-  EqualCard X Z := by
-  sorry
-
+    EqualCard X Z := by
+  rcases hXY with ⟨φXY,hXY⟩
+  rcases hYZ with ⟨φYZ,hYZ⟩
+  use φYZ ∘ φXY
+  exact Function.Bijective.comp hYZ hXY
+  
+  
 instance EqualCard.instSetoid : Setoid Type := ⟨ EqualCard, ⟨ refl, symm, trans ⟩ ⟩
 
 theorem EqualCard.univ (X : Type) : EqualCard (.univ : Set X) X :=
@@ -102,17 +137,112 @@ theorem CountablyInfinite.iff_image_inj {A:Type} (X: Set A) : CountablyInfinite 
   intro n; use ⟨ f n, by aesop ⟩; grind
 
 /-- Examples 8.1.3 -/
-example : CountablyInfinite ℕ := by sorry
+example : CountablyInfinite ℕ := by
+  use id
+  exact Function.bijective_id
+  
+  
 
-example : CountablyInfinite (.univ \ {0}: Set ℕ) := by sorry
+example : CountablyInfinite (Set.univ \ {0}: Set ℕ) := by
+  use (fun n =>  n-1)
+  apply And.intro
+  rintro ⟨y0,h0⟩ ⟨y1,h1⟩  h2  
+  dsimp at h2
+  rcases y0 with (_|predy0)
+  apply False.elim
+  rcases h0 with ⟨h00,h01⟩
+  apply h01
+  exact Set.mem_singleton 0
+  rcases y1 with (_|predy1)
+  apply False.elim
+  rcases h1 with ⟨h10,h11⟩
+  apply h11
+  exact Set.mem_singleton 0
+  simp only [Subtype.mk.injEq, Nat.add_right_cancel_iff]
+  simp only [add_tsub_cancel_right] at h2
+  exact h2
+  intro b
+  sorry
+  
+  
 
-example : CountablyInfinite ((fun n:ℕ ↦ 2*n) '' .univ) := by sorry
+example : CountablyInfinite ((fun n:ℕ ↦ 2*n) '' .univ) := by
+  use (fun n ↦ n/2)
+  apply And.intro
+  rintro ⟨y0,⟨x0,⟨hx00,hx01⟩ ⟩ ⟩
 
+  rintro ⟨y1,⟨x1,⟨hx10,hx11⟩ ⟩ ⟩
+  dsimp at hx01 hx11
+  dsimp
+  intro h0
+  simp only [Subtype.mk.injEq]
+  rw [←hx01,←hx11] at h0 ⊢
+  simp only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, mul_div_cancel_left₀] at h0
+  rw [h0]
+  intro z
+  use ⟨2* z,?_⟩
+  dsimp
+  simp only [ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, mul_div_cancel_left₀]
+  use z
+  apply And.intro (by trivial) (rfl)
+  
+theorem Nat.exists_min_finite {X : Set ℕ} (hXfinite : X.Finite) (hX : X.Nonempty) :
+  ∃ m ∈ X, ∀ n ∈ X, m ≤ n := by sorry
 
 /-- Proposition 8.1.4 (Well ordering principle / Exercise 8.1.2 -/
+theorem Nat.exists_min {X : Set ℕ} (hX : X.Nonempty) :
+  ∃ m ∈ X, ∀ n ∈ X, m ≤ n := by
+    rcases hX with ⟨x,hx⟩
+    let Γ := {n :ℕ | n ∈ X ∧ n < x}
+    rcases (em Γ.Nonempty ) with (hΓ|hΓ)
+    have hΓfinite : Γ.Finite := by sorry
+    have h1 := Nat.exists_min_finite hΓfinite hΓ
+    rcases h1 with ⟨m,hm0,hm1⟩
+    use m
+    apply And.intro
+    unfold Γ at hm0
+    rcases hm0 with ⟨hm00,hm01⟩
+    exact hm00
+    intro n hn
+    rcases (em (n ∈ Γ) ) with (hnΓ|hnnΓ)
+    specialize hm1 n hnΓ
+    exact hm1
+    have hmx : m < x := by
+      unfold Γ at hm0
+      rcases hm0 with ⟨hm00,hm01⟩
+      exact hm01
+    have hnx : x ≤ n := by
+      unfold Γ at hnnΓ
+      dsimp at hnnΓ
+      push_neg at hnnΓ
+      exact hnnΓ hn
+    linarith
+    use x
+    apply And.intro hx
+    intro n hn
+    push_neg at hΓ
+    by_contra! h1
+    have h2 : n ∈ Γ := by
+      unfold Γ
+      apply And.intro hn h1
+    rw [hΓ] at h2
+    exact h2
+
 theorem Nat.exists_unique_min {X : Set ℕ} (hX : X.Nonempty) :
   ∃! m ∈ X, ∀ n ∈ X, m ≤ n := by
-  sorry
+  have h0 := Nat.exists_min (hX)
+  rcases h0 with ⟨m,h0,h1⟩
+  use m
+  apply And.intro
+  dsimp
+  apply And.intro h0 h1
+  rintro ν ⟨hν0,hν1⟩
+  apply le_antisymm
+  exact hν1 m h0
+  exact h1 ν hν0
+  
+  
+  
 
 def Int.exists_unique_min : Decidable (∀ (X : Set ℤ) (hX : X.Nonempty), ∃! m ∈ X, ∀ n ∈ X, m ≤ n) := by
   -- the first line of this construction should be either `apply isTrue` or `apply isFalse`.

@@ -328,21 +328,34 @@ example : ∃ (X Y:Set ℝ), closure (X ∩ Y) ≠ closure X ∩ closure Y := by
 
 /-- Exercise 9.1.5 -/
 example (X:Set ℝ) : IsClosed (closure X) := by
-  sorry
+  apply isClosed_sInter
+  rintro θ ⟨hθ0,hθ1⟩
+  exact hθ0
 
 /-- Exercise 9.1.6 -/
 example {X Y:Set ℝ} (hY: IsClosed Y) (hXY: X ⊆ Y) : closure X ⊆ Y := by
-  sorry
+  rintro x hx
+  specialize hx Y
+  apply hx
+  apply And.intro hY hXY
 
 /-- Exercise 9.1.7 -/
 example {n:ℕ} (X: Fin n → Set ℝ) (hX: ∀ i, IsClosed (X i)) :
   IsClosed (⋃ i, X i) := by
+  induction' n with k hk
+  rw [Set.iUnion_of_empty]
+  exact isClosed_empty
   sorry
-
+  
 /-- Exercise 9.1.8 -/
 example {I:Type} (X: I → Set ℝ) (hX: ∀ i, IsClosed (X i)) :
   IsClosed (⋂ i, X i) := by
-  sorry
+  rw [←isOpen_compl_iff]
+  rw [Set.compl_iInter]
+  apply isOpen_iUnion
+  intro ι
+  specialize hX ι
+  rwa [isOpen_compl_iff]
 
 /-- Exercise 9.1.9 -/
 example {X:Set ℝ} {x:ℝ} (hx: AdherentPt x X) : LimitPt x X ∨ IsolatedPt x X := by

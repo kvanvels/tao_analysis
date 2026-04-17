@@ -63,7 +63,7 @@ theorem Rat.between_int (x:ℚ) : ∃ n:ℤ, n ≤ x ∧ x < (n+1) := by
   apply Int.div_mul_le
   exact hx0
   rw [Rat.lt_iff]
-  dsimp  
+  dsimp
   sorry
 
 theorem Nat.exists_gt (x:ℚ) : ∃ n:ℕ, n > x := by
@@ -98,8 +98,17 @@ def Int.infinite_descent : Decidable (∃ a:ℕ → ℤ, ∀ n, a (n+1) < a n) :
 
 /-- Exercise 4.4.2 (b) -/
 def Rat.pos_infinite_descent : Decidable (∃ a:ℕ → {x: ℚ // 0 < x}, ∀ n, a (n+1) < a n) := by
-  -- the first line of this construction should be either `apply isTrue` or `apply isFalse`.
+  apply isTrue
+  let φ : ℕ → {x : ℚ//0<x} := fun n ↦ ⟨((1:ℚ)/(n:ℚ)),by sorry⟩
+  use φ
+  intro ℓ
+  unfold φ
+  simp only [Subtype.mk_lt_mk]
+  simp only [Nat.cast_add, Nat.cast_one, one_div]
+  have h1 : ((ℓ + 1) : ℚ)  > (ℓ : ℚ ) := by sorry
   sorry
+    
+  
 
 #check even_iff_exists_two_mul
 #check odd_iff_exists_bit1
@@ -121,8 +130,6 @@ theorem Nat.even_or_odd'' (n:ℕ) : Even n ∨ Odd n := by
   induction' n using Nat.strong_induction_on with k hk
   induction' k with ℓ hℓ
   apply Or.inl
-  --have h1 := even_iff_exists_two_mul
---  rw [Nat.even_iff]
   use 0
   specialize hk ℓ (by linarith)
   rcases hk with (hk|hk)
