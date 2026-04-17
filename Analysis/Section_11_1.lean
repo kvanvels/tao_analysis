@@ -70,9 +70,26 @@ example : (Set.Ioo 1 2 : Set ℝ).OrdConnected := by sorry
 
 example : ¬(Set.Icc 1 2 ∪ Set.Icc 3 4 : Set ℝ).OrdConnected := by sorry
 
-example : (∅:Set ℝ).OrdConnected := by sorry
+example : (∅:Set ℝ).OrdConnected := by
+  rw [Set.ordConnected_def]
+  intro x hx
+  apply False.elim
+  exact hx
+  
+  
 
-example (x:ℝ) : ({x}: Set ℝ).OrdConnected := by sorry
+example (x:ℝ) : ({x}: Set ℝ).OrdConnected := by
+  rw [Set.ordConnected_def]
+  intro a ha b hb
+  rw [Set.mem_singleton_iff] at ha hb
+  intro y ⟨hya,hyb⟩
+  rw [ha] at hya
+  rw [hb] at hyb
+  rw [Set.mem_singleton_iff]
+  apply le_antisymm hyb hya  
+  
+  
+  
 
 /-- Lemma 11.1.4 / Exercise 11.1.1 -/
 theorem Bornology.IsBounded.of_boundedInterval (I: BoundedInterval) : Bornology.IsBounded (I:Set ℝ) := by
@@ -83,7 +100,10 @@ theorem BoundedInterval.ordConnected_iff (X:Set ℝ) : Bornology.IsBounded X ∧
 
 /-- Corollary 11.1.6 / Exercise 11.1.2 -/
 theorem BoundedInterval.inter (I J: BoundedInterval) : ∃ K : BoundedInterval, (I:Set ℝ) ∩ (J:Set ℝ) = (K:Set ℝ) := by
+  have hI : (I:Set ℝ).OrdConnected := by sorry
+  have hJ : (J:Set ℝ).OrdConnected := by sorry
   sorry
+
 
 noncomputable instance BoundedInterval.instInter : Inter BoundedInterval where
   inter I J := (inter I J).choose

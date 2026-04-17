@@ -42,29 +42,87 @@ variable (I : Type*)
 
 /-- Example 9.1.4 -/
 example {a b: EReal} (h: a > b) : Set.Icc a b = ∅ := by
-  sorry
+  apply Set.subset_empty_iff.1
+  intro x ⟨hx0,hx1⟩
+  apply False.elim
+  have h1 := by calc
+   x ≤ b := by sorry
+   _ < a := by sorry
+   _ ≤ x := by sorry
+  have h2 := lt_irrefl x
+  exact h2 h1  
+
 
 example {a b: EReal} (h: a ≥ b) : Set.Ico a b = ∅ := by
-  sorry
+  apply Set.subset_empty_iff.1
+  intro x ⟨hx0,hx1⟩
+  apply False.elim
+  apply (lt_irrefl x)
+  have h1 := by calc
+    x < b := by sorry
+    _ ≤ a := by sorry
+    _ ≤ x := by sorry
+  exact h1
+  
+  
 
 example {a b: EReal} (h: a ≥ b) : Set.Ioc a b = ∅ := by
-  sorry
+  apply Set.subset_empty_iff.1
+  intro x ⟨hx0,hx1⟩
+  apply lt_irrefl x
+  have h1 := by calc
+    x ≤ b := hx1
+    _ ≤ a := h
+    _ < x := hx0
+  exact h1
 
 example {a b: EReal} (h: a ≥ b) : Set.Ioo a b = ∅ := by
-  sorry
+  apply Set.subset_empty_iff.1
+  intro x ⟨hx0,hx1⟩
+  apply lt_irrefl x  
+  have h1 := by calc
+    x < b := hx1
+    _ ≤ a := h
+    _ < x := hx0
+  exact h1
+
+  
+
 
 example {a b: EReal} (h: a = b) : Set.Icc a b = {a} := by
-  sorry
+  apply subset_antisymm
+  intro x ⟨hxa,hxb⟩
+  simp only [Set.mem_singleton_iff]
+  apply le_antisymm _ hxa
+  rwa [h]
+  intro x hx
+  simp only [Set.mem_singleton_iff] at hx
+  apply And.intro
+  rw [hx]
+  rw [←h,hx]
+  
 
 /-- Definition 9.1.5.  Note that a slightly different `Real.adherent` was defined in Chapter 6.4 -/
 abbrev Real.adherent' (ε:ℝ) (x:ℝ) (X: Set ℝ) := ∃ y ∈ X, |x - y| ≤ ε
 
 /-- Example 9.1.7 -/
-example : (0.5:ℝ).adherent' 1.1 (.Ioo 0 1) := by sorry
+example : (0.5:ℝ).adherent' 1.1 (.Ioo 0 1) := by
+  use 0.95
+  apply And.intro
+  norm_num
+  norm_num
 
-example : ¬ (0.1:ℝ).adherent' 1.1 (.Ioo 0 1) := by sorry
+example : ¬ (0.1:ℝ).adherent' 1.1 (.Ioo 0 1) := by
+  push_neg
+  intro y ⟨hy0,hy1⟩
+  unfold abs
+  rw [lt_max_iff]
+  apply Or.inl
+  linarith  
+  
 
 example : (0.5:ℝ).adherent' 1.1 {1,2,3} := by sorry
+  
 
 
 namespace Chapter9
@@ -72,9 +130,40 @@ namespace Chapter9
 /-- Definition 9.1.-/
 abbrev AdherentPt (x:ℝ) (X:Set ℝ) := ∀ ε > (0:ℝ), ε.adherent' x X
 
-example : AdherentPt 1 (.Ioo 0 1) := by sorry
+example : AdherentPt 1 (.Ioo 0 1) := by
+  intro ε εpos
+  rcases (em (ε<1)) with (εsmall|εbig)
+  use 1- ε/2
+  apply And.intro
+  apply And.intro
+  linarith
+  linarith
+  rw [abs_le]
+  apply And.intro
+  linarith
+  linarith
+  push_neg at εbig
+  use 1/2
+  apply And.intro
+  apply And.intro
+  linarith
+  linarith
+  linarith  
+  
 
-example : ¬ AdherentPt 2 (.Ioo 0 1) := by sorry
+
+example : ¬ AdherentPt 2 (.Ioo 0 1) := by
+  unfold AdherentPt
+  push_neg
+  use 1/2
+  apply And.intro (by norm_num)
+  intro y ⟨hy0,hy1⟩
+  unfold abs
+  apply lt_max_iff.2
+  apply Or.inl
+  linarith
+  
+  
 
 /-- Definition 9.1.10 (Closure).  Here we identify this definition with the Mathilb version. -/
 theorem closure_def (X:Set ℝ) : closure X = { x | AdherentPt x X } := by
@@ -90,19 +179,119 @@ theorem AdherentPt_def (x:ℝ) (X:Set ℝ) : AdherentPt x X = ClusterPt x (.prin
   rw [←closure_def', mem_closure_iff_clusterPt]
 
 /-- Lemma 9.1.11 / Exercise 9.1.1 -/
-theorem subset_closure (X:Set ℝ): X ⊆ closure X := by sorry
+theorem subset_closure (X:Set ℝ): X ⊆ closure X := by
+  intro x hX
+  unfold closure
+  intro U ⟨hU,hU1⟩
+  exact hU1 hX
+
 
 /-- Lemma 9.1.11 / Exercise 9.1.1 -/
-theorem closure_union (X Y:Set ℝ): closure (X ∪ Y) = closure X ∪ closure Y := by sorry
+theorem closure_union (X Y:Set ℝ): closure (X ∪ Y) = closure X ∪ closure Y := by
+  apply subset_antisymm
+  rw [←Set.compl_subset_compl,Set.compl_union]
+  
+  intro x ⟨(hx0:¬(x ∈  closure X)),(hx1: ¬(x ∈ closure Y)) ⟩
+  show (¬ (x ∈ closure (X ∪ Y)))
+  rw [closure_def'] at hx0 hx1 ⊢
+  
+  unfold AdherentPt at hx0 hx1 ⊢ 
+  push_neg at hx0 hx1 ⊢ 
+  rcases hx0 with ⟨ε0,ε0pos,hε0⟩
+  rcases hx1 with ⟨ε1,ε1pos,hε1⟩
+  use min ε0 ε1
+  apply And.intro (by sorry)
+  rintro y hy
+  rw [min_lt_iff]
+  rcases hy with (hy|hy)
+  specialize hε0 y hy
+  apply Or.inl hε0
+  specialize hε1 y hy
+  apply Or.inr hε1
+  
+
+  intro x hx
+  wlog h0 : x ∈ closure X generalizing X Y with H
+  rcases hx with (hx|hx)
+  apply False.elim
+  exact h0 hx
+  specialize H Y X (Or.inl hx) hx
+  rwa [Set.union_comm]
+  rw [closure_def'] at ⊢ h0
+  intro ε εpos
+  clear hx
+  specialize h0 ε εpos
+  rcases h0 with ⟨θ,hθ0,hθ1⟩
+  use θ 
+  apply And.intro
+  apply Or.inl hθ0
+  exact hθ1
+  
+  
+   
+  
+  
+theorem closure_inter_helper (X Y : Set ℝ) : closure (X ∩ Y) ⊆ closure X := by
+  intro x h0
+  rw [closure_def'] at ⊢ h0
+  intro ε εpos
+  specialize h0 ε εpos
+  rcases h0 with ⟨θ,hθ0,hθ1⟩
+  use θ
+  apply And.intro hθ0.1 hθ1
+  
+  
 
 /-- Lemma 9.1.11 / Exercise 9.1.1 -/
-theorem closure_inter (X Y:Set ℝ): closure (X ∩ Y) ⊆ closure X ∩ closure Y := by sorry
+theorem closure_inter (X Y:Set ℝ): closure (X ∩ Y) ⊆ closure X ∩ closure Y := by
+  rw [Set.subset_inter_iff]
+  apply And.intro (closure_inter_helper X Y) 
+  rw [Set.inter_comm]
+  apply closure_inter_helper Y X
+  
 
 /-- Lemma 9.1.11 / Exercise 9.1.1 -/
-theorem closure_subset {X Y:Set ℝ} (h: X ⊆ Y): closure X ⊆ closure Y := by sorry
+theorem closure_subset {X Y:Set ℝ} (h: X ⊆ Y): closure X ⊆ closure Y := by
+  intro x hx
+  rw [closure_def'] at ⊢ hx
+  intro ε εpos
+  specialize hx ε εpos
+  rcases hx with ⟨θ,hθ⟩
+  use θ
+  apply And.intro (h hθ.1) hθ.2
+
+theorem closure_is_closed (X : Set ℝ) : IsClosed (closure X) := by sorry
+
+theorem isClosed_TFAE (U : Set ℝ): List.TFAE [IsClosed U, closure U ⊆ U, closure U = U] := by
+  tfae_have 1 → 2 := by
+    intro h0 x hx
+    specialize hx U
+    apply hx
+    apply And.intro h0 (subset_refl U)
+  tfae_have 2 → 3 := by
+    intro h0
+    apply le_antisymm h0 (subset_closure U)
+  tfae_have 3 → 1 := by
+    intro h0
+    rw [←h0]
+    apply isClosed_closure
+  tfae_finish
+
+theorem closure_closure (U : Set ℝ) : closure (closure U) = closure U := by
+  have h1 := (isClosed_TFAE (closure U)).out 2 0
+  rw [h1]
+  apply isClosed_closure
+  
+  
+  
 
 /-- Exercise 9.1.6 -/
-theorem closure_of_subset_closure {X Y:Set ℝ} (h: X ⊆ Y) (h' : Y ⊆ closure X): closure Y = closure X := by sorry
+theorem closure_of_subset_closure {X Y:Set ℝ} (h: X ⊆ Y) (h' : Y ⊆ closure X): closure Y = closure X := by
+   apply subset_antisymm
+   have h0 := closure_subset h'
+   rwa [closure_closure] at h0
+   exact closure_subset h
+   
 
 /-- Lemma 9.1.12 -/
 theorem closure_of_Ioo {a b:ℝ} (h:a < b) : closure (.Ioo a b) = .Icc a b := by
@@ -118,7 +307,7 @@ theorem closure_of_Ioo {a b:ℝ} (h:a < b) : closure (.Ioo a b) = .Icc a b := by
     intro y ⟨ _, _ ⟩; observe : -(x-y) ≤ |x-y|; linarith
   intro ⟨ h1, h2 ⟩
   by_cases ha : x = a
-  . sorry
+  . sorry  
   by_cases hb : x = b
   . sorry
   intro ε _; use x, (by exact ⟨lt_of_le_of_ne h1 (Ne.symm ha), lt_of_le_of_ne h2 hb⟩); simp; order
@@ -298,7 +487,31 @@ theorem isBounded_def (X: Set ℝ) : Bornology.IsBounded X ↔ ∃ M > 0, X ⊆ 
   intro ⟨ M, hM, hXM ⟩; use M; intro x hx; specialize hXM hx; simp_all [abs_le']; linarith [hXM.1]
 
 /-- Example 9.1.23 -/
-theorem Icc_bounded (a b:ℝ) : Bornology.IsBounded (.Icc a b) := by sorry
+theorem Icc_bounded (a b:ℝ) : Bornology.IsBounded (.Icc a b) := by
+  rw [isBounded_def]
+  use (max (|a|+1) (|b|+1) )  
+  apply And.intro
+  sorry
+  rcases em (|b| ≥ |a|) with (hbbig|habig)
+  
+  
+  intro x ⟨hx0,hx1⟩
+  apply And.intro
+  sorry
+  sorry
+  sorry
+  
+
+
+  
+  
+    
+  
+  
+  
+  
+  
+  
 
 /-- Example 9.1.23 -/
 theorem Ici_unbounded (a: ℝ) : ¬ Bornology.IsBounded (.Ici a) := by sorry
@@ -319,13 +532,29 @@ theorem R_unbounded : ¬ Bornology.IsBounded (.univ: Set ℝ) := by sorry
 theorem Heine_Borel (X: Set ℝ) :
   IsClosed X ∧ Bornology.IsBounded X ↔ ∀ a : ℕ → ℝ, (∀ n, a n ∈ X) →
   (∃ n : ℕ → ℕ, StrictMono n
-    ∧ ∃ L ∈ X, Filter.atTop.Tendsto (fun j ↦ a (n j)) (nhds L)) := by
+    ∧ ∃ L ∈ X, Filter.atTop.Tendsto (fun j ↦ a (n j)) (nhds L)) := by  
   sorry
 
 /-- Exercise 9.1.3 -/
 example : ∃ (X Y:Set ℝ), closure (X ∩ Y) ≠ closure X ∩ closure Y := by
-  sorry
-
+  let X :Set ℝ := .Ioo (-1) 0
+  let Y : Set ℝ := .Ioo (0) 1
+  use X, Y
+  intro h0    
+  replace h0 := subset_antisymm_iff.mp h0
+  rcases h0 with ⟨h0,h1⟩
+  clear h0
+  have h0X : 0 ∈ closure X := by sorry
+  have h0Y : 0 ∈ closure Y := by sorry
+  have h0XY :0 ∈ closure X ∩ closure Y := ⟨h0X,h0Y⟩
+  specialize h1 h0XY
+  have hXintY : X ∩ Y = ∅ := by sorry
+  rw [hXintY] at h1
+  rw [closure_empty] at h1
+  exact h1
+    
+  
+  
 /-- Exercise 9.1.5 -/
 example (X:Set ℝ) : IsClosed (closure X) := by
   apply isClosed_sInter
