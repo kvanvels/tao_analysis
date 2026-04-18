@@ -53,7 +53,7 @@ instance PreRat.instSetoid : Setoid PreRat where
     symm := by
       intro ⟨xn,xd,hxd⟩ ⟨yn,yd,hyd⟩ h0
       dsimp at *
-      rw [h0]      
+      rw [h0]
       
     trans := by
       intro ⟨xn,xd,hxd⟩ ⟨yn,yd,hyd⟩ ⟨zn,zd,hzd⟩ h0 h1
@@ -66,7 +66,7 @@ instance PreRat.instSetoid : Setoid PreRat where
        _ = (zn * yd) * xd := by rw [h1]
        _ = (zn * xd) * yd := by ring_nf
       clear hxd hzd h0 h1
-      exact (Int.mul_eq_mul_right_iff hyd).mp h2      
+      exact (Int.mul_eq_mul_right_iff hyd).mp h2
     }
 
 @[simp]
@@ -89,8 +89,8 @@ theorem Rat.eq (a c:ℤ) {b d:ℤ} (hb: b ≠ 0) (hd: d ≠ 0): a // b = c // d 
 theorem Rat.eq_diff (n:Rat) : ∃ a b, b ≠ 0 ∧ n = a // b := by
   apply Quotient.ind _ n; intro ⟨ a, b, h ⟩
   refine ⟨ a, b, h, ?_ ⟩
-  sorry
-  
+  simp [formalDiv]
+  rw [dif_neg h]  
   
 
 /--
@@ -99,8 +99,7 @@ theorem Rat.eq_diff (n:Rat) : ∃ a b, b ≠ 0 ∧ n = a // b := by
   may be more convenient to avoid that operation and work directly with the {name}`Quotient` API.
 
 -/
-instance Rat.decidableEq : DecidableEq Rat := by
-  sorry
+instance Rat.decidableEq : DecidableEq Rat := by sorry
 
 /-- Lemma 4.2.3 (Addition well-defined) -/
 instance Rat.add_inst : Add Rat where
@@ -133,8 +132,6 @@ instance Rat.mul_inst : Mul Rat where
        sorry
        sorry
       )
-   
-
 
 /-- Definition 4.2.2 (Multiplication of rationals) -/
 theorem Rat.mul_eq (a c:ℤ) {b d:ℤ} (hb: b ≠ 0) (hd: d ≠ 0) :
@@ -220,8 +217,22 @@ instance Rat.instAddCommGroup : AddCommGroup Rat where
 
 /-- Proposition 4.2.4 (laws of algebra) / Exercise 4.2.3 -/
 instance Rat.instCommMonoid : CommMonoid Rat where
-  mul_comm := by sorry
-  mul_assoc := by sorry
+  mul_comm := by
+    rintro ⟨a0,a1,ha⟩ ⟨b0,b1,hb⟩
+    apply Quotient.sound
+    have h1 : a1 * b1 ≠ 0 := by sorry
+    have h2 : b1 * a1 ≠ 0 := by sorry    
+    rw [dif_pos h1]
+    rw [dif_pos h2]
+    rw [PreRat.eq]
+    ring    
+    
+  mul_assoc := by
+    rintro ⟨a0,a1,ha⟩ ⟨b0,b1,hb⟩ ⟨c0,c1,hc⟩
+    apply Quotient.sound
+    dsimp
+    sorry
+  
   one_mul := by sorry
   mul_one := by sorry
 
