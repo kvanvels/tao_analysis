@@ -9,7 +9,31 @@ namespace KChapter2
 /-- Definition 2.3.1 (Multiplication of natural numbers) -/
 abbrev KNat.mul (n m : KNat) : KNat := KNat.recurse (fun _ prod ↦ prod + m) 0 n
 
-theorem zero_lt_iff_isPos (a : KNat) : a.IsPos ↔ 0 < a := by sorry
+theorem KNat.zero_lt_iff_isPos (a : KNat) : a.IsPos ↔ 0 < a := by
+  rcases a with (_|preda)
+  apply Iff.intro
+  intro h0
+  unfold IsPos at h0
+  apply False.elim
+  apply h0
+  rfl
+  intro h0
+  apply False.elim
+  rw [zero_eq] at h0
+  rcases h0 with ⟨ℓ,hℓ⟩
+  have h1 := ne_add_succ 0 ℓ
+  exact h1 hℓ
+  apply Iff.intro
+  intro h0
+  use preda
+  rw [zero_add]
+  intro h0
+  unfold IsPos
+  intro h0
+  have h1 := succ_ne preda
+  exact h1 h0
+  
+  
 
 /-- This instance allows for the {kw (of := «term_*_»)}`*` notation to be used for natural number multiplication. -/
 instance KNat.instMul : Mul KNat where
@@ -68,7 +92,18 @@ theorem KNat.mul_one (m: KNat) : m * 1 = m := by
 /-- This lemma will be useful to prove Lemma 2.3.3.
 Compare with Mathlib's {name}`Nat.mul_pos` -/
 lemma KNat.pos_mul_pos {n m: KNat} (h₁: n.IsPos) (h₂: m.IsPos) : (n * m).IsPos := by
-  sorry
+  rw [isPos_iff] at *
+  rcases n with (_|predn)
+  apply False.elim
+  apply h₁ 
+  rfl
+  rcases m with (_|predm)
+  apply False.elim
+  apply h₂
+  rfl
+  rw [mul_succ,add_succ]
+  exact succ_ne (predn♯ * predm + predn)
+
   
 
 /-- Lemma 2.3.3 (Positive natural numbers have no zero divisors) / Exercise 2.3.2.
@@ -81,12 +116,9 @@ lemma KNat.mul_eq_zero (n m: KNat) : n * m = 0 ↔ n = 0 ∨ m = 0 := by
   rw [zero_eq]
   apply Or.inr
   rw [succ_mul] at h0
-  rcases m with (_|predm)
-  rw [zero_eq]
-  apply False.elim
-  rw [add_succ] at h0
-  have h1 := succ_ne (predn * predm♯ + predm)
-  exact h1 h0
+  have h1 := add_eq_zero (predn * m) m h0
+  exact h1.2
+  
   rintro (hn|hm)
   rw [hn,zero_mul]
   rw [hm,mul_zero]  
@@ -257,6 +289,9 @@ theorem KNat.pow_one (m: KNat) : m ^ (1:KNat) = m := by
 /-- Exercise 2.3.4-/
 theorem KNat.sq_add_eq (a b: KNat) :
     (a + b) ^ (2 : KNat) = a ^ (2 : KNat) + 2 * a * b + b ^ (2 : KNat) := by
-  sorry
+    have h2 : 2 = 1♯ := by sorry
+    rw [h2]
+    rw [pow_succ,pow_one,add_mul,mul_add,mul_add,pow_succ,pow_one,succ_mul,one_mul,add_mul,pow_succ,pow_one]
+    ring
 
 end KChapter2

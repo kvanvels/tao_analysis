@@ -10,11 +10,10 @@ deriving Repr, DecidableEq  -- this allows `decide` to work on `Nat`
 
 /-- Axiom 2.1 (0 is a natural number) -/
 instance KNat.instZero : Zero KNat := ⟨ zero ⟩
-#check (0:KNat)
 
 /-- Axiom 2.2 (Successor of a natural number is a natural number) -/
 postfix:100 "♯" => KNat.succ
-#check (fun n ↦ n♯)
+
 
 
 /-- Definition 2.1.3 (Definition of the numerals 0, 1, 2, etc.). Note:
